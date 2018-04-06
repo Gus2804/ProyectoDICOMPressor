@@ -124,9 +124,11 @@
   <ItemGroup>
     <ClCompile Include="conversion.cpp" />
     <ClCompile Include="Converter.cpp" />
+    <ClCompile Include="Patient.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Converter.h" />
+    <ClInclude Include="Patient.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

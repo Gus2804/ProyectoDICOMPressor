@@ -4,6 +4,8 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/core/utility.hpp>
 
+#include "Converter.h"
+
 using namespace cv; // all the new API is put into "cv" namespace. Export its content
 using namespace std;
 
@@ -11,16 +13,11 @@ int main(int argc, char** argv)
 {
 	string rutaImagen = "C:\\Users\\muset\\Desktop\\Retinal Images\\diaretdb1_v_1_1\\diaretdb1_v_1_1\\resources\\images\\ddb1_fundusimages\\image002.png";
 
-	Mat imagen = imread(rutaImagen);
+	char imagenDestino[] = "C:\\Users\\muset\\Desktop\\Retinal Images\\diaretdb1_v_1_1\\diaretdb1_v_1_1\\resources\\images\\ddb1_fundusimages\\image002.dcm";
 
-	if (imagen.empty()) {
-		cout << "Could not open or find the image" << std::endl;
-		return -1;
-	}
+	Converter converter = Converter();
 
-	namedWindow("Display window", WINDOW_AUTOSIZE); // Create a window for display.
-	imshow("Display window", imagen);                // Show our image inside it.
-	waitKey(0); // Wait for a keystroke in the window
+	converter.convertImageToDicom(rutaImagen, imagenDestino);
 
 	return 0;
 }

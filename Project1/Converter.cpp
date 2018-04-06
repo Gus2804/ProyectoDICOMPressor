@@ -1,6 +1,14 @@
 #include "Converter.h"
 
+#include <stdio.h>
+#include <iostream>
+#include <fstream>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/core/utility.hpp>
 
+using namespace cv;
+using namespace std;
 
 Converter::Converter()
 {
@@ -11,57 +19,37 @@ Converter::~Converter()
 {
 }
 
-int Converter::convertPNGToDicom(string sourcePath, string destinationPath)
+int Converter::convertImageToDicom(string sourcePath, char* destinationPath)
 {
-	return 0;
-}
-
-int Converter::convertTIFFToDicom(string sourcePath, string destinationPath)
-{
-	return 0;
-}
-
-int Converter::convertPPMToDicom(string sourcePath, string destinationPath)
-{
-	return 0;
-}
-
-int Converter::convertDicomToPNG(string sourcePath, string destinationPath)
-{
-	return 0;
-}
-
-int Converter::convertDicomToTIFF(string sourcePath, string destinationPath)
-{
-	return 0;
-}
-
-int Converter::convertDicomToPPM(string sourcePath, string destinationPath)
-{
+	Mat image = readImage(sourcePath);
+	writeDICOM(image, destinationPath);
 	return 0;
 }
 
 Mat Converter::readImage(string path)
 {
-	return Mat();
+	return imread(path);
 }
 
-int Converter::writePNG(Mat image, string path)
+int Converter::writeDICOM(Mat image, char* path)
 {
-	return 0;
-}
+	//Creación de archivo de archivo
+	ofstream fsalida(path,
+		ios::out | ios::binary);
 
-int Converter::writePPM(Mat image, string path)
-{
-	return 0;
-}
+	//Creacion de metainformation
+	char* preamble = (char*) malloc(sizeof(char)*128);
+	for (int i = 127; i >= 0; i--) {
+		preamble[i] = 0;
+	}
+	fsalida.write(preamble,sizeof(preamble));
+	char* prefix = (char*)malloc(sizeof(char) * 4);
+	prefix[0] = 'd';
+	prefix[1] = 'i';
+	prefix[2] = 'c';
+	prefix[3] = 'm';
+	fsalida.write(prefix, sizeof(prefix));
 
-int Converter::writeTIFF(Mat image, string path)
-{
-	return 0;
-}
-
-int Converter::writeDICOM(Mat image, string path)
-{
+	fsalida.close();
 	return 0;
 }
