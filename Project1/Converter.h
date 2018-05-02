@@ -1,3 +1,4 @@
+#include "Study.h"
 #include <stdio.h>
 #include <iostream>
 #include <opencv2/imgproc.hpp>
@@ -13,10 +14,16 @@ class Converter
 public:
 	Converter();
 	~Converter();
-	int convertImageToDicom(string sourcePath, char* destinationPath);
+	int convertImageToDicom(string sourcePath, char *destinationPath, Study studyData);
 
 private:
 	Mat readImage(string path);
-	int writeDICOM(Mat* image, char* path);
+	int writeDICOM(Mat *image, char *path, Study studyData);
 };
 
+typedef struct dataset {
+	unsigned short int tag[2];
+	char *vr;
+	char *length;
+	char *value;
+} dataset_t;
