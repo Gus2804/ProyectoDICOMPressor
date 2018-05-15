@@ -20,20 +20,28 @@ int main(int argc, char** argv)
 
 	Converter converter = Converter();
 
-	converter.convertImageToDicom(rutaImagen, imagenDestino);
+	Study study = Study();
+	/*study.studyDate = "20180509";
+	study.patientName = "Peralta^Gustavo^^^";
+	study.patientBirthdate = "19930428";*/
+
+	converter.convertImageToDicom(rutaImagen, imagenDestino, study);
 	
-	ifstream fentrada(ejemplo,
+	ifstream fentrada(imagenDestino,
 		ios::in | ios::binary);
 
-	char* file = (char*) malloc(sizeof(char)*1000);
+	char* file = (char*)malloc(sizeof(char) * 1000);
 
 	fentrada.read(file, sizeof(char) * 1000);
 
-	for (int i = 0; i < 1000; i++) {
-		cout << (int)file[i] << " " << file[i] << endl;
+	for (int i = 132; i < 408; i++) {
+		cout << std::hex << (unsigned int)file[i] << " " << file[i] << endl;
 	}
 
 	fentrada.close();
+
+	//pixeles
+
 	
 	cin.get();
 	
