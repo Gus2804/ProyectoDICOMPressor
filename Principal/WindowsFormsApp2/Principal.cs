@@ -37,15 +37,8 @@ namespace WindowsFormsApp2
 
         private void BtnEnviar_Click(object sender, EventArgs e)
         {
-            Form envio= new Envio.EnvioForm();
-            envio.Show();
-
-
-        }
-
-        private void Principal_Load(object sender, EventArgs e)
-        {
-
+            Form envform = new Envio.EnvioForm();
+            envform.Show();
         }
     }
 }

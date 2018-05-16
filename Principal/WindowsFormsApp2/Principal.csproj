@@ -89,17 +89,17 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\Dropbox\TT\Transmision\ProyectoDICOMPressor\Envio\WindowsFormsApp1\WindowsFormsApp1\Envio.csproj">
-      <Project>{53039cb3-ee54-4833-90d3-d5e40531eb3d}</Project>
-      <Name>Envio</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
       <Visible>False</Visible>
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\Dropbox\TT\Transmision\ProyectoDICOMPressor\Envio\WindowsFormsApp1\WindowsFormsApp1\Envio.csproj">
+      <Project>{53039cb3-ee54-4833-90d3-d5e40531eb3d}</Project>
+      <Name>Envio</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

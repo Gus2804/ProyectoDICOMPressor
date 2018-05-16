@@ -304,7 +304,6 @@
             this.Controls.Add(this.Nomb);
             this.Name = "Principal";
             this.Text = "Compresor de Imagnes de Retina";
-            this.Load += new System.EventHandler(this.Principal_Load);
             ((System.ComponentModel.ISupportInitialize)(this.ImgenBox)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
