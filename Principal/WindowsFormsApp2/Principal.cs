@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -22,12 +24,17 @@ namespace WindowsFormsApp2
         {
             openFileDialogImg.ShowDialog();
             Rut.Text = openFileDialogImg.FileName;
+            ImagenBox.Load(Rut.Text);
             BtnConv.Enabled = true;
+            Process.Start(Rut.Text);
+
+
         }
 
         private void BtnConv_Click(object sender, EventArgs e)
         {   
             BtnCompr.Enabled = true;
+            Stream fileStream = File.OpenRead(Rut.Text);
         }
 
         private void BtnCompr_Click(object sender, EventArgs e)

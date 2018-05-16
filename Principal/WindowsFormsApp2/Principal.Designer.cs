@@ -52,9 +52,9 @@
             this.BtnConv = new System.Windows.Forms.Button();
             this.BtnCompr = new System.Windows.Forms.Button();
             this.BtnEnviar = new System.Windows.Forms.Button();
-            this.ImgenBox = new System.Windows.Forms.PictureBox();
+            this.ImagenBox = new System.Windows.Forms.PictureBox();
             this.openFileDialogImg = new System.Windows.Forms.OpenFileDialog();
-            ((System.ComponentModel.ISupportInitialize)(this.ImgenBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ImagenBox)).BeginInit();
             this.SuspendLayout();
             // 
             // Nomb
@@ -260,13 +260,14 @@
             this.BtnEnviar.UseVisualStyleBackColor = true;
             this.BtnEnviar.Click += new System.EventHandler(this.BtnEnviar_Click);
             // 
-            // ImgenBox
+            // ImagenBox
             // 
-            this.ImgenBox.Location = new System.Drawing.Point(449, 84);
-            this.ImgenBox.Name = "ImgenBox";
-            this.ImgenBox.Size = new System.Drawing.Size(280, 264);
-            this.ImgenBox.TabIndex = 24;
-            this.ImgenBox.TabStop = false;
+            this.ImagenBox.Location = new System.Drawing.Point(405, 23);
+            this.ImagenBox.Name = "ImagenBox";
+            this.ImagenBox.Size = new System.Drawing.Size(356, 368);
+            this.ImagenBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+            this.ImagenBox.TabIndex = 24;
+            this.ImagenBox.TabStop = false;
             // 
             // openFileDialogImg
             // 
@@ -276,8 +277,8 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.ImgenBox);
+            this.ClientSize = new System.Drawing.Size(782, 416);
+            this.Controls.Add(this.ImagenBox);
             this.Controls.Add(this.BtnEnviar);
             this.Controls.Add(this.BtnCompr);
             this.Controls.Add(this.BtnConv);
@@ -304,7 +305,7 @@
             this.Controls.Add(this.Nomb);
             this.Name = "Principal";
             this.Text = "Compresor de Imagnes de Retina";
-            ((System.ComponentModel.ISupportInitialize)(this.ImgenBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ImagenBox)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -336,7 +337,7 @@
         private System.Windows.Forms.Button BtnConv;
         private System.Windows.Forms.Button BtnCompr;
         private System.Windows.Forms.Button BtnEnviar;
-        private System.Windows.Forms.PictureBox ImgenBox;
+        private System.Windows.Forms.PictureBox ImagenBox;
         private System.Windows.Forms.OpenFileDialog openFileDialogImg;
     }
 }
