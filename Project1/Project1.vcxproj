@@ -122,12 +122,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Compresor.cpp" />
+    <ClCompile Include="CompressionResults.cpp" />
     <ClCompile Include="conversion.cpp" />
     <ClCompile Include="Converter.cpp" />
+    <ClCompile Include="DicomFileStructure.cpp" />
     <ClCompile Include="Study.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Compresor.h" />
+    <ClInclude Include="CompressionResults.h" />
     <ClInclude Include="Converter.h" />
+    <ClInclude Include="DicomFileStructure.h" />
     <ClInclude Include="Study.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
