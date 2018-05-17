@@ -12,14 +12,14 @@ using System.Net.Sockets;
 using System.IO;
 
 
-namespace WindowsFormsApp1
+namespace Envio
 {
-    public partial class Form1 : Form
+    public partial class EnvioForm : Form
     {
         TextBox dynamicTextBox = new TextBox();
         OpenFileDialog openFileDialog = new OpenFileDialog();
 
-        public Form1()
+        public EnvioForm()
         {
             InitializeComponent();
         }
@@ -44,6 +44,11 @@ namespace WindowsFormsApp1
         {
             openFileDialog.ShowDialog();
             tbFilename.Text = openFileDialog.FileName;
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

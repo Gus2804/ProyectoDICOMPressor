@@ -1,6 +1,6 @@
-﻿namespace WindowsFormsApp1
+﻿namespace Envio
 {
-    partial class Form1
+    partial class EnvioForm
     {
         /// <summary>
         /// Variable del diseñador necesaria.
@@ -110,7 +110,7 @@
             this.label4.TabIndex = 8;
             this.label4.Text = "Ingrese direccion IP destino";
             // 
-            // Form1
+            // EnvioForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
@@ -123,8 +123,9 @@
             this.Controls.Add(this.tbServer);
             this.Controls.Add(this.tbFilename);
             this.Controls.Add(this.btnBrowse);
-            this.Name = "Form1";
+            this.Name = "EnvioForm";
             this.Text = "Seleccion...";
+            this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
