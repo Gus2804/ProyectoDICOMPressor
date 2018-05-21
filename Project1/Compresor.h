@@ -12,5 +12,6 @@ public:
 private:
 	Vec3f computeVariance(Mat block);
 	Mat computeInterpolation(uchar corners[2][2],int n, int m);
+	
 };
 
