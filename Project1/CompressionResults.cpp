@@ -1,6 +1,7 @@
+#include<stdio.h>
 #include "CompressionResults.h"
 
-
+using namespace std;
 
 CompressionResults::CompressionResults()
 {
@@ -11,12 +12,12 @@ CompressionResults::~CompressionResults()
 {
 }
 
-char * CompressionResults::getCompressedFilePath()
+string CompressionResults::getCompressedFilePath()
 {
 	return compressedFilePath;
 }
 
-void CompressionResults::setCompressedFilePath(char * path)
+void CompressionResults::setCompressedFilePath(string path)
 {
 	compressedFilePath = path;
 }

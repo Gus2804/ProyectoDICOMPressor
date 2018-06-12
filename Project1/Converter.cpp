@@ -439,11 +439,13 @@ int Converter::writeDICOM(Mat* image, char* path, Study studyData)
 	unsigned short cols = image->cols;
 	unsigned short rows = image->rows;
 
+	cout << rows << "x" << cols << endl;
+
 	char* imageCharacteristicsLengthDataSet = (char*)malloc(sizeof(char) * 12);
 	char* samplesPerPixelDataSet = (char*)malloc(sizeof(char) * 10);
-	char* photometricInterpretationDataSet = (char*)malloc(sizeof(char) * 11);
+	char* photometricInterpretationDataSet = (char*)malloc(sizeof(char) * 12);
 	char* planarConfigurationDataSet = (char*)malloc(sizeof(char) * 10);
-	char* numberOfFramesDataSet = (char*)malloc(sizeof(char) * 9);
+	char* numberOfFramesDataSet = (char*)malloc(sizeof(char) * 10);
 	char* rowsDataSet = (char*)malloc(sizeof(char) * 10);
 	char* columnsDataSet = (char*)malloc(sizeof(char) * 10);
 	char* bitsAllocatedDataSet = (char*)malloc(sizeof(char) * 10);
@@ -458,7 +460,7 @@ int Converter::writeDICOM(Mat* image, char* path, Study studyData)
 	imageCharacteristicsLengthDataSet[5] = 'L';
 	imageCharacteristicsLengthDataSet[6] = 4;
 	imageCharacteristicsLengthDataSet[7] = 0;
-	imageCharacteristicsLengthDataSet[8] = 90;
+	imageCharacteristicsLengthDataSet[8] = 92;
 	imageCharacteristicsLengthDataSet[9] = 0x00;
 	imageCharacteristicsLengthDataSet[10] = 0x00;
 	imageCharacteristicsLengthDataSet[11] = 0x00;
@@ -484,13 +486,14 @@ int Converter::writeDICOM(Mat* image, char* path, Study studyData)
 	photometricInterpretationDataSet[3] = 0x00;
 	photometricInterpretationDataSet[4] = 'C';
 	photometricInterpretationDataSet[5] = 'S';
-	photometricInterpretationDataSet[6] = 3;
+	photometricInterpretationDataSet[6] = 4;
 	photometricInterpretationDataSet[7] = 0;
 	photometricInterpretationDataSet[8] = 'R';
 	photometricInterpretationDataSet[9] = 'G';
 	photometricInterpretationDataSet[10] = 'B';
+	photometricInterpretationDataSet[10] = '\0';
 
-	fsalida.write(photometricInterpretationDataSet, sizeof(char) * 11);
+	fsalida.write(photometricInterpretationDataSet, sizeof(char) * 12);
 
 	planarConfigurationDataSet[0] = 0x28;
 	planarConfigurationDataSet[1] = 0x00;
@@ -511,11 +514,12 @@ int Converter::writeDICOM(Mat* image, char* path, Study studyData)
 	numberOfFramesDataSet[3] = 0x00;
 	numberOfFramesDataSet[4] = 'I';
 	numberOfFramesDataSet[5] = 'S';
-	numberOfFramesDataSet[6] = 1;
+	numberOfFramesDataSet[6] = 2;
 	numberOfFramesDataSet[7] = 0;
 	numberOfFramesDataSet[8] = '1';
+	numberOfFramesDataSet[9] = '\0';
 
-	fsalida.write(numberOfFramesDataSet, sizeof(char) * 9);
+	fsalida.write(numberOfFramesDataSet, sizeof(char) * 10);
 
 	rowsDataSet[0] = 0x28;
 	rowsDataSet[1] = 0x00;
@@ -525,8 +529,8 @@ int Converter::writeDICOM(Mat* image, char* path, Study studyData)
 	rowsDataSet[5] = 'S';
 	rowsDataSet[6] = 2;
 	rowsDataSet[7] = 0;
-	rowsDataSet[8] = rows & 0xff;
-	rowsDataSet[9] = (rows >> 8) & 0xff;
+	rowsDataSet[8] = rows & 0x00ff;
+	rowsDataSet[9] = (rows & 0xff00) >> 8;
 
 	fsalida.write(rowsDataSet, sizeof(char) * 10);
 
@@ -585,7 +589,7 @@ int Converter::writeDICOM(Mat* image, char* path, Study studyData)
 	char* pixelLengthDataSet = (char*)malloc(sizeof(char) * 12);
 	int pixelsSizeInBytes = cols * rows * 3;
 
-	pixelLengthDataSet[0] = 0xe0; 
+	pixelLengthDataSet[0] = 0xffffffe0; 
 	pixelLengthDataSet[1] = 0x7f;
 	pixelLengthDataSet[2] = 0x00;
 	pixelLengthDataSet[3] = 0x00;
@@ -594,15 +598,15 @@ int Converter::writeDICOM(Mat* image, char* path, Study studyData)
 	pixelLengthDataSet[6] = 4;
 	pixelLengthDataSet[7] = 0;
 	pixelLengthDataSet[8] = (pixelsSizeInBytes + 12) & 0xff;
-	pixelLengthDataSet[9] = (pixelsSizeInBytes + 12 >> 8) & 0xff;
-	pixelLengthDataSet[10] = (pixelsSizeInBytes + 12 >> 16) & 0xff;
-	pixelLengthDataSet[11] = (pixelsSizeInBytes + 12 >> 24) & 0xff;
+	pixelLengthDataSet[9] = ((pixelsSizeInBytes + 12) >> 8) & 0xff;
+	pixelLengthDataSet[10] = ((pixelsSizeInBytes + 12) >> 16) & 0xff;
+	pixelLengthDataSet[11] = ((pixelsSizeInBytes + 12) >> 24) & 0xff;
 
 	fsalida.write(pixelLengthDataSet, sizeof(char) * 12);
 
 	char* pixelDataSet = (char*)malloc(sizeof(char) * 12);
 	
-	pixelDataSet[0] = 0xe0;
+	pixelDataSet[0] = 0xffffffe0;
 	pixelDataSet[1] = 0x7f;
 	pixelDataSet[2] = 0x10;
 	pixelDataSet[3] = 0x00;
@@ -617,19 +621,27 @@ int Converter::writeDICOM(Mat* image, char* path, Study studyData)
 
 	fsalida.write(pixelDataSet, sizeof(char) * 12);
 
-	for (size_t i = 0; i < image->rows; i++)
+	for (int i = 0; i < image->rows; i++)
 	{
-		for (size_t j = 0; j < image->cols; j++)
+		for (int j = 0; j < image->cols; j++)
 		{
 			Vec3b pixel = image->at<Vec3b>(i, j);
+
+			char* rgb = (char*)malloc(sizeof(char) * 3);
+
+			rgb[0] = pixel[2];
+			rgb[1] = pixel[1];
+			rgb[2] = pixel[0];
 
 			uchar B = pixel[0];
 			uchar G = pixel[1];
 			uchar R = pixel[2];
 
-			fsalida.write((char*) &R, sizeof(char));
+			/*fsalida.write((char*) &R, sizeof(char));
 			fsalida.write((char*) &G, sizeof(char));
-			fsalida.write((char*) &B, sizeof(char));
+			fsalida.write((char*) &B, sizeof(char));*/
+
+			fsalida.write(rgb, sizeof(char)*3);
 		}
 	}
 

@@ -9,24 +9,14 @@ DicomFileStructure::~DicomFileStructure()
 {
 }
 
-char * DicomFileStructure::getMetainformation()
+char * DicomFileStructure::getHeader()
 {
-	return metainformation;
+	return header;
 }
 
-void DicomFileStructure::setMetainformation(char * metainfo)
+void DicomFileStructure::setHeader(char * head)
 {
-	metainformation = metainfo;
-}
-
-Study DicomFileStructure::getStudyData()
-{
-	return studyData;
-}
-
-void DicomFileStructure::setStudyData(Study study)
-{
-	studyData = study;
+	header = head;
 }
 
 Mat DicomFileStructure::getPixelData()
@@ -37,4 +27,24 @@ Mat DicomFileStructure::getPixelData()
 void DicomFileStructure::setPixelData(Mat pixels)
 {
 	pixelData = pixels;
+}
+
+char * DicomFileStructure::getPath()
+{
+	return path;
+}
+
+void DicomFileStructure::setPath(char * filePath)
+{
+	path = filePath;
+}
+
+long DicomFileStructure::getSize()
+{
+	return size;
+}
+
+void DicomFileStructure::setSize(long fileSize)
+{
+	size = fileSize;
 }

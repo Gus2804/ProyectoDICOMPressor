@@ -1,11 +1,16 @@
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
 #pragma once
 class CompressionResults
 {
 public:
 	CompressionResults();
 	~CompressionResults();
-	char* getCompressedFilePath();
-	void setCompressedFilePath(char* path);
+	string getCompressedFilePath();
+	void setCompressedFilePath(string path);
 	double getCompressionRate();
 	void setCompressionRate(double cr);
 	double getPeakSignalToNoiseToRatio();
@@ -14,7 +19,7 @@ public:
 	void setEntropy(double entropyValue);
 
 private:
-	char* compressedFilePath;
+	string compressedFilePath;
 	double compressionRate;
 	double peakSignalToNoiseRatio;
 	double entropy;

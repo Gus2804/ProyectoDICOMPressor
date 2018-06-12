@@ -12,16 +12,19 @@ class DicomFileStructure
 public:
 	DicomFileStructure();
 	~DicomFileStructure();
-	char *getMetainformation();
-	void setMetainformation(char* metainformation);
-	Study getStudyData();
-	void setStudyData(Study study);
+	char *getHeader(); 
+	void setHeader(char* head);
 	Mat getPixelData();
 	void setPixelData(Mat pixels);
+	char *getPath();
+	void setPath(char* filePath);
+	long getSize();
+	void setSize(long fileSize);
 
 private:
-	char* metainformation;
-	Study studyData;
+	char* header;
 	Mat pixelData;
+	char* path;
+	long size;
 };
 
