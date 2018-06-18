@@ -19,6 +19,16 @@ void DicomFileStructure::setHeader(char * head)
 	header = head;
 }
 
+int DicomFileStructure::getHeaderSize()
+{
+	return headerSize;
+}
+
+void DicomFileStructure::setHeaderSize(int headSize)
+{
+	headerSize = headSize;
+}
+
 Mat DicomFileStructure::getPixelData()
 {
 	return pixelData;

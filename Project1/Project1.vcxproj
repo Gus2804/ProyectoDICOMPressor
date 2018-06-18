@@ -91,6 +91,9 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>opencv_world340d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>NotSet</SubSystem>
+      <EntryPointSymbol>
+      </EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -126,20 +129,24 @@
     <ClCompile Include="CompressionResults.cpp" />
     <ClCompile Include="conversion.cpp" />
     <ClCompile Include="Converter.cpp" />
+    <ClCompile Include="Decompressor.cpp" />
     <ClCompile Include="DicomExtractor.cpp" />
     <ClCompile Include="DicomFileStructure.cpp" />
     <ClCompile Include="HuffmanTree.cpp" />
     <ClCompile Include="HuffmanCompressor.cpp" />
+    <ClCompile Include="RandomizationList.cpp" />
     <ClCompile Include="Study.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Compresor.h" />
     <ClInclude Include="CompressionResults.h" />
     <ClInclude Include="Converter.h" />
+    <ClInclude Include="Decompressor.h" />
     <ClInclude Include="DicomExtractor.h" />
     <ClInclude Include="DicomFileStructure.h" />
     <ClInclude Include="HuffmanTree.h" />
     <ClInclude Include="HuffmanCompressor.h" />
+    <ClInclude Include="RandomizationList.h" />
     <ClInclude Include="Study.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

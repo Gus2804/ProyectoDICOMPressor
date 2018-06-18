@@ -1,8 +1,10 @@
 #include "Compresor.h"
 #include <cmath>
+#include <ctime>
 #include <iostream>
 #include <fstream>
 #include "HuffmanCompressor.h"
+#include "RandomizationList.h"
 
 using namespace cv;
 using namespace std;
@@ -25,7 +27,7 @@ CompressionResults Compresor::compressByBilinearInterpolation(DicomFileStructure
 	compressedPath.append("_compressed.comp");
 	cout << compressedPath << endl;
 
-	compressionResults.setCompressedFilePath((char*)compressedPath.c_str());
+	compressionResults.setCompressedFilePath(compressedPath);
 
 	int sigBlocks = 0;
 	//Número de bloques de la imagen
@@ -228,7 +230,7 @@ CompressionResults Compresor::compressByBilinearInterpolation(DicomFileStructure
 
 	Mat reconstructedImage = interpolatedImage + differences;
 	
-	int  numOfPixels = N * n * M * m;
+	int numOfPixels = N * n * M * m;
 	Mat ajustedImageFloat;
 	imageAjusted.convertTo(ajustedImageFloat, CV_32F);
 	Mat error = ajustedImageFloat - reconstructedImage;
@@ -252,7 +254,7 @@ CompressionResults Compresor::compressByBilinearInterpolation(DicomFileStructure
 	compressedFile.write(reinterpret_cast<char*>(&PSNR), sizeof(double));
 	compressedFile.write(reinterpret_cast<char*>(&compressionRatio), sizeof(double));
 	compressedFile.write(reinterpret_cast<char*>(&totalEntropy), sizeof(double));
-	compressedFile.write(dicomFile.getHeader(),sizeof(dicomFile.getHeader()));
+	compressedFile.write(dicomFile.getHeader(),dicomFile.getHeaderSize());
 	char* tempBytes = new char[tempSize];
 	tempFile.read(tempBytes, tempSize);
 	compressedFile.write(tempBytes,tempSize);
@@ -260,6 +262,217 @@ CompressionResults Compresor::compressByBilinearInterpolation(DicomFileStructure
 	compressedFile.close();
 	remove("Temp.tmp");
 	return compressionResults;
+}
+
+CompressionResults Compresor::compressByRandomization(DicomFileStructure dicomFile, float threshold)
+{
+	CompressionResults results;
+	string compressedPath = string(dicomFile.getPath());
+	compressedPath = compressedPath.substr(0, compressedPath.size() - 4);
+	compressedPath.append("_compressed.comp");
+	results.setCompressedFilePath(compressedPath);
+
+	Mat imageChannels[3];
+	split(dicomFile.getPixelData(), imageChannels);
+
+	Mat imageChannelsFloat[3];
+
+	Mat dctImage[3];
+
+	double maxDct[3];
+	double minDct[3];
+
+	for (int i = 0; i < 3; i++) {
+		imageChannels[i].convertTo(imageChannelsFloat[i], CV_32F);
+		dct(imageChannelsFloat[i], dctImage[i]);
+	}
+
+	Mat dctQuantized[3];
+	for (int i = 0; i < 3; i++) {
+		dctQuantized[i] = quantizeMat(dctImage[i], 9, &minDct[i], &maxDct[i]);
+		cout << "minDCT " << i << ": " << minDct[i] << endl;
+		cout << "maxDCT " << i << ": " << maxDct[i] << endl;
+	}
+
+	srand(time(NULL));
+
+	int start = rand() % 256;
+
+	bool clasificating = true;
+
+	cout << dctQuantized[0].rows << "x" << dctQuantized[0].cols << endl;
+	cout << "Start: " << start << endl;
+
+	//Tecnica de selección aleatoria
+	RandomizationList list[3];
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < dctQuantized[i].rows; j++) {
+			short* dctRow = dctQuantized[i].ptr<short>(j);
+			for (int k = 0; k < dctQuantized[i].cols; k++) {
+				/*if ((int)dctRow[k] == start) {
+					clasificating = true;
+				}*/
+				if (clasificating) {
+					if ((dctRow[k] % 2) == (start % 2) && dctRow[k] < threshold) {
+						int pos[2] = { j,k };
+						list[i].insert(pos, dctRow[k]);
+						//dctRow[k] = 0;
+					}
+				}
+			}
+		}
+	}
+
+	cout << "Longitud de la lista 0: " << list[0].getLength() << endl;
+	cout << "Longitud de la lista 1: " << list[1].getLength() << endl;
+	cout << "Longitud de la lista 2: " << list[2].getLength() << endl;
+	//Recorrer header para insertar datos
+	int count = 0, i = 0;
+	list[count].restartCursor();
+	cout << "Longitud de la cabecera: " << dicomFile.getHeaderSize() << endl;
+	for (i = 0; i < dicomFile.getHeaderSize(); i++) {
+		if (list[count].getLength()) {
+			int* pos = list[count].getActualPos();
+			dctQuantized[count].at<short>(pos[0], pos[1]) = dicomFile.getHeader()[i];
+			if (list[count].hasNext()) {
+				list[count].next();
+			}
+			else {
+				count++;
+				if (count == 3) {
+					break;
+				}
+			}
+		}
+	}
+	i++;
+	char* headerBytes;
+	short newLength = 0;
+	if (i < dicomFile.getHeaderSize()) {
+		newLength = dicomFile.getHeaderSize() - i;
+		headerBytes = new char[newLength];
+		for (int j = i; j < dicomFile.getHeaderSize(); j++) {
+			headerBytes[j - i] = dicomFile.getHeader()[j];
+		}
+	}
+
+	//Escritura archivo comprimido
+	HuffmanTree dctFrequencies[3];
+	double dctEntropies[3];
+	string dctDictionaries[3][256];
+	uchar** frequenciesArray = new uchar*[3];
+	int lengths[3];
+	HuffmanCompressor huffmanCompressor;
+	for (int i = 0; i < 3; i++) {
+		huffmanCompressor.countElements(dctQuantized[i], &dctFrequencies[i]);
+		dctEntropies[i] = dctFrequencies[i].getEntropy(dctQuantized[i].rows*dctQuantized[i].cols);
+		lengths[i] = dctFrequencies[i].getLength() * 6;
+		frequenciesArray[i] = (uchar*)malloc(sizeof(uchar)*lengths[i]);
+		dctFrequencies[i].fillFrequencyArray(frequenciesArray[i]);
+		huffmanCompressor.creatDictionary(&dctFrequencies[i], dctDictionaries[i]);
+	}
+
+	//Escritura del archivo temporal con bytes de huffman
+	ofstream ftemp("Temp.tmp", ios::out | ios::binary);
+	char nextByte[1];
+	int bitCount = 0;
+	for (int i = 0; i < 3; i++) {
+		ftemp.write(reinterpret_cast<char*>(&maxDct[i]), sizeof(double));
+		ftemp.write(reinterpret_cast<char*>(&minDct[i]), sizeof(double));
+		ftemp.write((char*)frequenciesArray[i], lengths[i]);
+		nextByte[0] = 0;
+		bitCount = 0;
+		for (int a = 0; a < dctQuantized[i].rows; a++) {
+			short* dctQuantizedRow = dctQuantized[i].ptr<short>(a);
+			for (int b = 0; b < dctQuantized[i].cols; b++) {
+				uchar symbol = dctQuantizedRow[b];
+				for (int k = 0; k < dctDictionaries[i][symbol].size(); k++, bitCount++) {
+					if (bitCount == 8) {
+						ftemp.write(nextByte, 1);
+						nextByte[0] = 0;
+						bitCount = 0;
+					}
+					if (dctDictionaries[i][symbol][k] == '1') {
+						nextByte[0] = nextByte[0] | (0x01 << bitCount);
+					}
+				}
+			}
+		}
+		if (bitCount) {
+			ftemp.write(nextByte, 1);
+		}
+	}
+	ftemp.close();
+
+	//Calculo de entropia
+	double totalEntropy = 0;
+	for (int i = 0; i < 3; i++) {
+		totalEntropy += dctEntropies[i];
+	}
+
+	//Calculo de PSNR
+	Mat dctDequantized[3];
+	for (int i = 0; i < 3; i++) {
+		list[i].restartCursor();
+		if (list[i].getLength()) {
+			while (list[i].hasNext()) {
+				int* pos = list[i].getActualPos();
+				dctQuantized[i].at<short>(pos[0], pos[1]) = list[i].getActualData();;
+				list[i].next();
+			}
+			int* pos = list[i].getActualPos();
+			dctQuantized[i].at<short>(pos[0], pos[1]) = list[i].getActualData();;
+		}
+		dctDequantized[i] = dequantizeMat(dctQuantized[i], 9, minDct[i], maxDct[i]);
+	}
+
+	Mat imageChannelsReconstructed[3];
+	Mat imageReconstructedRounded(dicomFile.getPixelData().rows, dicomFile.getPixelData().cols, CV_8UC3);
+	for (int i = 0; i < 3; i++) {
+		idct(dctDequantized[i],imageChannelsReconstructed[i]);
+		for (int j = 0; j < imageChannelsReconstructed[i].rows; j++) {
+			float* imageChannelsReconstructedRow = imageChannelsReconstructed[i].ptr<float>(j);
+			for (int k = 0; k < imageChannelsReconstructed[i].cols; k++) {
+				imageReconstructedRounded.at<Vec3b>(j, k)[i] = (uchar)((int)round(imageChannelsReconstructedRow[k]));
+			}
+		}
+	}
+	
+	int numOfPixels = dicomFile.getPixelData().cols * dicomFile.getPixelData().rows;
+	Mat error = dicomFile.getPixelData() - imageReconstructedRounded;
+	Scalar sumError = sum(error);
+	double meanSquareError = ((std::pow(sumError[0], 2) + std::pow(sumError[1], 2) + std::pow(sumError[2], 2)) / numOfPixels) / 3;
+
+	double PSNR = 10 * log(std::pow(255, 2) / meanSquareError);
+	
+	//Escritura archivo de salida
+	ifstream tempFile("Temp.tmp", ios::in | ios::binary | ios::ate);
+	streampos tempSize = tempFile.tellg();
+	long compressedSize = (long)tempFile.tellg() + (long)sizeof(dicomFile.getHeader());
+	double compressionRatio = (double)dicomFile.getSize() / (double)compressedSize;
+	results.setCompressionRate(compressionRatio);
+	tempFile.seekg(0);
+	ofstream compressedFile(compressedPath.c_str(), ios::binary | ios::out);
+	char prefix[] = "CSA";
+	compressedFile.write(prefix, 3);
+	compressedFile.write(reinterpret_cast<char*>(&PSNR), sizeof(double));
+	compressedFile.write(reinterpret_cast<char*>(&compressionRatio), sizeof(double));
+	compressedFile.write(reinterpret_cast<char*>(&totalEntropy), sizeof(double));
+	compressedFile.write(reinterpret_cast<char*>(&newLength), sizeof(double));
+	if (newLength > 0) {
+		compressedFile.write(headerBytes, newLength);
+	}
+	char* tempBytes = new char[tempSize];
+	tempFile.read(tempBytes, tempSize);
+	compressedFile.write(tempBytes, tempSize);
+	tempFile.close();
+	compressedFile.close();
+	remove("Temp.tmp");
+
+	results.setPeakSignalToNoiseRatio(PSNR);
+	results.setEntropy(totalEntropy);
+	
+	return results;
 }
 
 Vec3f Compresor::computeVariance(Mat block)
@@ -304,17 +517,56 @@ Mat Compresor::computeInterpolation(uchar corners[2][2], int n, int m)
 Mat Compresor::quantizeMat(Mat input, int quantizationLevels, double* min, double* max)
 {
 	minMaxLoc(input, min, max);
-	Mat quantizedMat = Mat::zeros(input.rows, input.cols, CV_8UC1);
-	for (int i = 0; i < input.rows; i++) {
-		uchar* quantizedMatRow = quantizedMat.ptr<uchar>(i);
-		float* inputRow = input.ptr<float>(i);
-		for (int j = 0; j < input.cols; j++) {
-			float valueQuantized = ((pow(2, quantizationLevels) - 1) * (inputRow[j] - *min)) / (*max - *min);
-			quantizedMatRow[j] = (uchar)((int)round(valueQuantized));
+	Mat quantizedMat;
+	if (quantizationLevels <= 8) {
+		quantizedMat = Mat::zeros(input.rows, input.cols, CV_8UC1);
+		for (int i = 0; i < input.rows; i++) {
+			uchar* quantizedMatRow = quantizedMat.ptr<uchar>(i);
+			float* inputRow = input.ptr<float>(i);
+			for (int j = 0; j < input.cols; j++) {
+				float valueQuantized = ((pow(2, quantizationLevels) - 1) * (inputRow[j] - *min)) / (*max - *min);
+				quantizedMatRow[j] = (uchar)((int)round(valueQuantized));
+			}
+		}
+	}
+	else {
+		quantizedMat = Mat::zeros(input.rows, input.cols, CV_16UC1);
+		for (int i = 0; i < input.rows; i++) {
+			ushort* quantizedMatRow = quantizedMat.ptr<ushort>(i);
+			float* inputRow = input.ptr<float>(i);
+			for (int j = 0; j < input.cols; j++) {
+				float valueQuantized = ((pow(2, quantizationLevels) - 1) * (inputRow[j] - *min)) / (*max - *min);
+				quantizedMatRow[j] = (ushort)((int)round(valueQuantized));
+			}
 		}
 	}
 	return quantizedMat;
 }
+
+Mat Compresor::dequantizeMat(Mat input, int quantizationLevels, double min, double max)
+{
+	Mat dequantizedMat = Mat::zeros(input.rows, input.cols, CV_32FC1);
+	
+	for (int i = 0; i < input.rows; i++) {
+		float* dequantizedMatRow = dequantizedMat.ptr<float>(i);
+		if (quantizationLevels <= 8) {
+			uchar* inputRow = input.ptr<uchar>(i);
+			for (int j = 0; j < input.cols; j++) {
+				float valueDequantized = ((inputRow[j] * (max - min)) / (pow(2, quantizationLevels) - 1)) + min;
+				dequantizedMatRow[j] = valueDequantized;
+			}
+		}
+		else {
+			ushort* inputRow = input.ptr<ushort>(i);
+			for (int j = 0; j < input.cols; j++) {
+				float valueDequantized = ((inputRow[j] * (max - min)) / (pow(2, quantizationLevels) - 1)) + min;
+				dequantizedMatRow[j] = valueDequantized;
+			}
+		}
+	}
+	return dequantizedMat;
+}
+
 
 //Código que puede servir
 

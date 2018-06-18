@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Project1", "Project1\Project1.vcxproj", "{F2A1D558-2ADE-43D8-8678-B3F2E4BB53CA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Compresor de imagenes", "Project1\Project1.vcxproj", "{F2A1D558-2ADE-43D8-8678-B3F2E4BB53CA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +26,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {E07BA75D-8F64-4456-A0CA-38EBF40273FD}
+		SolutionGuid = {532152D8-E436-4D1E-ACF9-3392A8BC0B72}
 	EndGlobalSection
 EndGlobal

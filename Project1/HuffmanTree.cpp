@@ -70,7 +70,7 @@ bool HuffmanTree::isEmpty()
 	return first==NULL;
 }
 
-void HuffmanTree::insert(uchar element)
+void HuffmanTree::insert(short element)
 {
 	if (isEmpty()) {
 		first = new FrequencyNode(element);
@@ -94,7 +94,7 @@ void HuffmanTree::insert(FrequencyNode* left, FrequencyNode* right)
 	length++;
 }
 
-FrequencyNode * HuffmanTree::search(uchar element)
+FrequencyNode * HuffmanTree::search(short element)
 {
 	if (isEmpty()) {
 		return NULL;
@@ -209,11 +209,23 @@ void HuffmanTree::fillFrequencyArray(uchar * array)
 	FrequencyNode* cursor = first;
 	int index = 0;
 	while (cursor) {
-		array[index] = cursor->element;
-		array[index + 1] = (uchar)(0x000000ff & cursor->frequency);
-		array[index + 2] = (uchar)((0x0000ff00 & cursor->frequency) >> 8);
-		array[index + 3] = (uchar)((0x00ff0000 & cursor->frequency) >> 16);
-		array[index + 4] = (uchar)((0xff000000 & cursor->frequency) >> 24);
+		if (cursor->element <= 255) {
+			array[index] = cursor->element;
+			array[index + 1] = (uchar)(0x000000ff & cursor->frequency);
+			array[index + 2] = (uchar)((0x0000ff00 & cursor->frequency) >> 8);
+			array[index + 3] = (uchar)((0x00ff0000 & cursor->frequency) >> 16);
+			array[index + 4] = (uchar)((0xff000000 & cursor->frequency) >> 24);
+		}
+		else
+		{
+			array[index] = (uchar)(0x000000ff & cursor->element);
+			array[index + 1] = (uchar)((0x0000ff00 & cursor->element) >> 8); ;
+			array[index + 2] = (uchar)(0x000000ff & cursor->frequency);
+			array[index + 3] = (uchar)((0x0000ff00 & cursor->frequency) >> 8);
+			array[index + 4] = (uchar)((0x00ff0000 & cursor->frequency) >> 16);
+			array[index + 5] = (uchar)((0xff000000 & cursor->frequency) >> 24);
+		}
+		
 		cursor = cursor->next;
 		index += 5;
 	}

@@ -47,10 +47,13 @@ DicomFileStructure DicomExtractor::extractDICOM(char * path)
 	}
 
 	char* header = new char[i];
+	cout << i << endl;
 	for (int a = 0; a < i; a++) {
 		header[a] = bytes[a];
 	}
-
+	cout << header << endl;
+	int headerSize = i;
+	
 	i += 12;
 	Mat image = Mat(rows,cols,CV_8UC3);
 	int a, b;
@@ -65,6 +68,7 @@ DicomFileStructure DicomExtractor::extractDICOM(char * path)
 	}
 
 	dicomStructure.setHeader(header);
+	dicomStructure.setHeaderSize(headerSize);
 	dicomStructure.setPixelData(image);
 	dicomStructure.setPath(path);
 	dicomStructure.setSize(size);

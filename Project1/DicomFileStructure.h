@@ -14,6 +14,8 @@ public:
 	~DicomFileStructure();
 	char *getHeader(); 
 	void setHeader(char* head);
+	int getHeaderSize();
+	void setHeaderSize(int headSize);
 	Mat getPixelData();
 	void setPixelData(Mat pixels);
 	char *getPath();
@@ -23,6 +25,7 @@ public:
 
 private:
 	char* header;
+	int headerSize;
 	Mat pixelData;
 	char* path;
 	long size;

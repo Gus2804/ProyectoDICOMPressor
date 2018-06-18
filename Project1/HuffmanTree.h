@@ -20,7 +20,7 @@ public:
 	
 
 private:
-	uchar element;
+	short element;
 	long frequency;
 	FrequencyNode *next;
 	FrequencyNode *left;
@@ -38,12 +38,12 @@ public:
 	/*
 	Metodo que inserta un nodo de elemento
 	*/
-	void insert(uchar element);
+	void insert(short element);
 	/*
 	Metodo que inserta un nodo de frecuencia
 	*/
 	void insert(FrequencyNode* left, FrequencyNode* right);
-	FrequencyNode* search(uchar element);
+	FrequencyNode* search(short element);
 	/*
 	Metodo para recorrer un elemento a la siguiente posición
 	*/
