@@ -1,0 +1,20 @@
+Tasa de compresion: 4.09468 Entropia: 3.6094 PSNR: 75.308
+Tasa de compresion: 3.31177
+ Entropia: 3.60795
+ PSNR: -89.0759
+Tasa de compresion: 2.36736 Entropia: 8.78064 PSNR: 87.6738
+Tasa de compresion: 3.97883
+ Entropia: 2.62667
+ PSNR: -41.7523
+Tasa de compresion: 2.37357 Entropia: 8.73474 PSNR: 87.7973
+Tasa de compresion: 3.96842
+ Entropia: 2.66888
+ PSNR: -32.6742
+Tasa de compresion: 2.40467 Entropia: 8.61801 PSNR: 104.106
+Tasa de compresion: 3.99305
+ Entropia: 2.53819
+ PSNR: -34.4922
+Tasa de compresion: 2.40268 Entropia: 8.57864 PSNR: 105.209
+Tasa de compresion: 3.98941
+ Entropia: 2.5592
+ PSNR: -31.4824
