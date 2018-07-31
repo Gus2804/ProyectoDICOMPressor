@@ -435,12 +435,30 @@ namespace Interfaz {
 		openFileDialog1->Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
 		openFileDialog1->FilterIndex = 2;
 		openFileDialog1->RestoreDirectory = true;
-
+		System::String^ str;
 
 		if (openFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK)
 		{
-			pictureBox1->Load(openFileDialog1->FileName);
-			ruta->Text = openFileDialog1->FileName;
+			str = openFileDialog1->FileName;
+			std::string str2 = msclr::interop::marshal_as<std::string>(str);
+			int pos = str2.find(".");
+			string ext = str2.substr(pos + 1);
+			cout << ext << endl;
+			if (ext == "dcm") {
+				msclr::interop::marshal_context context;
+				DicomExtractor extractor;
+				DicomFileStructure file = extractor.extractDICOM((char*)context.marshal_as<const char*>(openFileDialog1->FileName));
+				System::Drawing::Graphics^ graphics = pictureBox1->CreateGraphics();
+				System::IntPtr ptr(file.getPixelData().ptr());
+				System::Drawing::Bitmap^ bitmap = gcnew System::Drawing::Bitmap(file.getPixelData().cols,
+					file.getPixelData().rows, file.getPixelData().step, System::Drawing::Imaging::PixelFormat::Format24bppRgb, ptr);
+				System::Drawing::RectangleF rect(0, 0, pictureBox1->Width, pictureBox1->Height);
+				graphics->DrawImage(bitmap, rect);
+			}
+			else {
+				pictureBox1->Load(openFileDialog1->FileName);
+				ruta->Text = openFileDialog1->FileName;
+			}
 		}
 		
 	}

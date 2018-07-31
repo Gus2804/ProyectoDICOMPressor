@@ -1,6 +1,7 @@
 #include "Decompressor.h"
 #include "Compresor.h"
 #include "HuffmanCompressor.h"
+#include "RandomizationList.h"
 
 #include <fstream>
 
@@ -32,8 +33,9 @@ DicomFileStructure Decompressor::decompress(string path)
 	char prefix[3];
 	file.read(prefix, 3);
 	double PSNR, entropy, compressionRatio;
-	int headerLength, imageWidth, imageHeigth, m, n;
+	int imageWidth, imageHeigth;
 	if (prefix[0] == 'I') {
+		int headerLength, m, n;
 		char *PSNRBytes, *CRBytes, *entropyBytes, *headerLengthBytes, *headerBytes;
 
 		PSNRBytes = new char[sizeof(double)];
@@ -287,7 +289,15 @@ DicomFileStructure Decompressor::decompress(string path)
 
 	}
 	else {
-		char *PSNRBytes, *CRBytes, *entropyBytes, *headerLengthBytes;
+		RandomizationList list[3];
+		char *PSNRBytes, *CRBytes, *entropyBytes, *readBytes, *doubleBytes, *headerBytes;
+		uchar *frequencies;
+		int headerLength, frequencyLengths[3];
+		double minDCT[3], maxDCT[3];
+		HuffmanCompressor compressor;
+		HuffmanTree tree;
+		string dictionaries[3][512];
+		short** DCTValues = new short*[3];
 		PSNRBytes = new char[sizeof(double)];
 		file.read(PSNRBytes, sizeof(double));
 		PSNR = *((double*)(PSNRBytes));
@@ -297,9 +307,178 @@ DicomFileStructure Decompressor::decompress(string path)
 		entropyBytes = new char[sizeof(double)];
 		file.read(entropyBytes, sizeof(double));
 		entropy = *((double*)(entropyBytes));
-		headerLengthBytes = new char[sizeof(int)];
-		file.read(headerLengthBytes, sizeof(int));
-		headerLength = *((int*)(headerLengthBytes));
+		readBytes = new char[sizeof(int)];
+		file.read(readBytes, sizeof(int));
+		imageWidth = *((int*)(readBytes));
+		readBytes = new char[sizeof(int)];
+		file.read(readBytes, sizeof(int));
+		imageHeigth = *((int*)(readBytes));
+		for (int i = 0; i < 3; i++) {
+			readBytes = new char[sizeof(int)];
+			file.read(readBytes, sizeof(int));
+			int length = *((int*)(readBytes));
+			for (int j = 0; j < length; j++) {
+				int pos[2];
+				readBytes = new char[sizeof(int)];
+				file.read(readBytes, sizeof(int));
+				pos[0] = *((int*)(readBytes));
+				readBytes = new char[sizeof(int)];
+				file.read(readBytes, sizeof(int));
+				pos[1] = *((int*)(readBytes));
+				unsigned char data = file.get();
+				list[i].insert(pos, data);
+			}
+		}
+		readBytes = new char[sizeof(int)];
+		file.read(readBytes, sizeof(int));
+		headerLength = *((int*)(readBytes));
+		if (headerLength > 0) {
+			headerBytes = new char[headerLength];
+			file.read(headerBytes, headerLength);
+		}
+		string code = "";
+		for (int i = 0; i < 3; i++) {
+			doubleBytes = new char[sizeof(double)];
+			file.read(doubleBytes, sizeof(double));
+			minDCT[i] = *((double*)(doubleBytes));
+
+			doubleBytes = new char[sizeof(double)];
+			file.read(doubleBytes, sizeof(double));
+			maxDCT[i] = *((double*)(doubleBytes));
+
+			readBytes = new char[sizeof(int)];
+			file.read(readBytes, sizeof(int));
+			frequencyLengths[i] = *((int*)(readBytes));
+
+			frequencies = new uchar[frequencyLengths[i]];
+			file.read((char*)frequencies, frequencyLengths[i]);
+			short element = 0;
+			long frequency = 0;
+			long totalElements = 0;
+			
+			if (tree.getLength() == 1) {
+				tree.pop();
+			}
+			for (int j = frequencyLengths[i] - 1; j >= 0; j--) {
+				
+				if (j % 6 <= 1) {
+					element = (element<<8)+ frequencies[j];
+					if (j % 6 == 0) {
+						cout << element << ": " << frequency << endl;
+						tree.insert(element, frequency);
+						totalElements += frequency;
+						frequency = 0;
+						element = 0;
+					}
+				}
+				else {
+					frequency = (frequency << 8) + frequencies[j];
+				}
+			}
+			compressor.creatDictionary(&tree, dictionaries[i]);
+
+			DCTValues[i] = new short[totalElements];
+			char nextByte;
+			long symbolCounter = 0;
+			int byteCounter = 0;
+			while (symbolCounter < totalElements) {
+				file.get(nextByte);
+				for (int k = 0; k < 8; k++) {
+					if ((nextByte >> k) & 0x01)
+						code += '1';
+					else
+						code += '0';
+					for (int a = 0; a < 512; a++) {
+						if (dictionaries[i][a].length()) {
+							if (dictionaries[i][a] == code) {
+								DCTValues[i][symbolCounter] = a;
+								code.clear();
+								symbolCounter++;
+								break;
+							}
+						}
+					}
+					if (symbolCounter == totalElements) {
+						break;
+					}
+				}
+			}
+		}
+
+		Mat dctQuantized[3];
+
+		Mat dctDequantized[3];
+
+		string header = "";
+		int index = 0;
+		char aux;
+		for (int i = 0; i < 3; i++) {
+			index = 0;
+			dctQuantized[i] = Mat(imageHeigth, imageWidth, CV_16SC1);
+			for (int j = 0; j < imageHeigth; j++) {
+				short* dctQuantizedRow = dctQuantized[i].ptr<short>(j);
+				for (int k = 0; k < imageWidth; k++) {
+					dctQuantizedRow[k] = DCTValues[i][index];
+					index++;
+				}
+			}
+
+			list[i].restartCursor();
+			if (list[i].getLength()) {
+				while (list[i].hasNext()) {
+					int* pos = list[i].getActualPos();
+					dctQuantized[i].at<short>(pos[0], pos[1]) = list[i].getActualData();;
+					list[i].next();
+				}
+				int* pos = list[i].getActualPos();
+				if (header.size() < 4 ||
+					((header.at(header.size() - 4) != 0xffffffe0) ||
+					(header.at(header.size() - 3) != 0x7f) ||
+					(header.at(header.size() - 2) != 0x10) ||
+					(header.at(header.size() - 1) != 0x00))) {
+					aux = (char)dctQuantized[i].at<short>(pos[0], pos[1]);
+					header = header + aux;
+				}
+				dctQuantized[i].at<short>(pos[0], pos[1]) = list[i].getActualData();;
+			}
+			dctDequantized[i] = dequantizeMat(dctQuantized[i], 9, minDCT[i], maxDCT[i]);
+		}
+
+		if (headerLength > 0) {
+			for (int i = 0; i < headerLength; i++) {
+				header = header + headerBytes[i];
+			}
+		}
+
+		Mat imageChannelsReconstructed[3];
+		Mat imageReconstructedRounded(imageHeigth, imageWidth, CV_8UC3);
+		for (int i = 0; i < 3; i++) {
+			idct(dctDequantized[i], imageChannelsReconstructed[i]);
+			for (int j = 0; j < imageChannelsReconstructed[i].rows; j++) {
+				float* imageChannelsReconstructedRow = imageChannelsReconstructed[i].ptr<float>(j);
+				for (int k = 0; k < imageChannelsReconstructed[i].cols; k++) {
+					imageReconstructedRounded.at<Vec3b>(j, k)[i] = (uchar)((int)round(imageChannelsReconstructedRow[k]));
+				}
+			}
+		}
+		structure.setPixelData(imageReconstructedRounded);
+		fileOutput.write(header.c_str(), header.size());
+
+		for (int i = 0; i < imageReconstructedRounded.rows; i++)
+		{
+			for (int j = 0; j < imageReconstructedRounded.cols; j++)
+			{
+				Vec3b pixel = imageReconstructedRounded.at<Vec3b>(i, j);
+
+				char* rgb = (char*)malloc(sizeof(char) * 3);
+
+				rgb[0] = pixel[2];
+				rgb[1] = pixel[1];
+				rgb[2] = pixel[0];
+
+				fileOutput.write(rgb, sizeof(char) * 3);
+			}
+		}
 	}
 	file.close();
 	fileOutput.close();

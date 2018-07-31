@@ -16,11 +16,12 @@ int main()
 	Compresor compresor;
 
 	string imagenDestino = "C:\\Users\\muset\\Desktop\\Retinal Images\\diaretdb1_v_1_1\\diaretdb1_v_1_1\\resources\\images\\ddb1_fundusimages\\image003.dcm";
-	string path = "C:\\Users\\muset\\Desktop\\Retinal Images\\diaretdb1_v_1_1\\diaretdb1_v_1_1\\resources\\images\\ddb1_fundusimages\\image003_compressed_ibl.comp";
+	string path = "C:\\Users\\muset\\Desktop\\Retinal Images\\diaretdb1_v_1_1\\diaretdb1_v_1_1\\resources\\images\\ddb1_fundusimages\\image003_compressed_csa.comp";
 	
 	DicomFileStructure structure = extractor.extractDICOM((char*)imagenDestino.c_str());
 
-	//results = compresor.compressByBilinearInterpolation(structure, 4, 4, 1.0f, 8);
+	//results = compresor.compressByBilinearInterpolation(structure, 4,4,1,8);
+	results = compresor.compressByRandomization(structure, 141);
 	
 	Decompressor decompressor;
 	decompressor.decompress(path);

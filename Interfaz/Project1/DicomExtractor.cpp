@@ -47,9 +47,9 @@ DicomFileStructure DicomExtractor::extractDICOM(char * path)
 		i++;
 	}
 
-	char* header = new char[i];
+	char* header = new char[i+4];
 	cout << i << endl;
-	for (int a = 0; a < i; a++) {
+	for (int a = 0; a < i+4; a++) {
 		header[a] = bytes[a];
 	}
 	cout << header << endl;

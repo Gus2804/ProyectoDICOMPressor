@@ -12,8 +12,8 @@ typedef struct dictionaryPair {
 class FrequencyNode
 {
 public:
-	FrequencyNode(uchar elementValue, FrequencyNode* nextNode = NULL);
-	FrequencyNode(uchar elementValue, long frequencyValue, FrequencyNode* nextNode = NULL);
+	FrequencyNode(short elementValue, FrequencyNode* nextNode = NULL);
+	FrequencyNode(short elementValue, long frequencyValue, FrequencyNode* nextNode = NULL);
 	FrequencyNode(FrequencyNode* leftNode, FrequencyNode* rightNode, FrequencyNode* nextNode = NULL);
 	void incrementFrequency();
 	bool hasToShift();
@@ -62,7 +62,7 @@ public:
 	long getLength();
 	FrequencyNode* getFirst();
 	double getEntropy(long numberOfElements);
-	void fillFrequencyArray(uchar* array);
+	void fillFrequencyArray(uchar* array, int bitsForElement);
 
 protected:
 	FrequencyNode * first;

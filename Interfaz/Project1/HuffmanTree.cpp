@@ -1,7 +1,7 @@
 #include "HuffmanTree.h"
 #include <iostream>
 
-FrequencyNode::FrequencyNode(uchar elementValue, FrequencyNode* nextNode) {
+FrequencyNode::FrequencyNode(short elementValue, FrequencyNode* nextNode) {
 	element = elementValue;
 	frequency = 1;
 	next = nextNode;
@@ -9,7 +9,7 @@ FrequencyNode::FrequencyNode(uchar elementValue, FrequencyNode* nextNode) {
 	left = NULL;
 }
 
-FrequencyNode::FrequencyNode(uchar elementValue, long frequencyValue, FrequencyNode * nextNode)
+FrequencyNode::FrequencyNode(short elementValue, long frequencyValue, FrequencyNode * nextNode)
 {
 	element = elementValue;
 	frequency = frequencyValue;
@@ -225,17 +225,18 @@ double HuffmanTree::getEntropy(long numberOfElements)
 	return entropy;
 }
 
-void HuffmanTree::fillFrequencyArray(uchar * array)
+void HuffmanTree::fillFrequencyArray(uchar * array, int bitsForElement)
 {
 	FrequencyNode* cursor = first;
 	int index = 0;
 	while (cursor) {
-		if (cursor->element <= 255) {
+		if (bitsForElement <= 8) {
 			array[index] = cursor->element;
 			array[index + 1] = (uchar)(0x000000ff & cursor->frequency);
 			array[index + 2] = (uchar)((0x0000ff00 & cursor->frequency) >> 8);
 			array[index + 3] = (uchar)((0x00ff0000 & cursor->frequency) >> 16);
 			array[index + 4] = (uchar)((0xff000000 & cursor->frequency) >> 24);
+			index += 5;
 		}
 		else
 		{
@@ -245,9 +246,10 @@ void HuffmanTree::fillFrequencyArray(uchar * array)
 			array[index + 3] = (uchar)((0x0000ff00 & cursor->frequency) >> 8);
 			array[index + 4] = (uchar)((0x00ff0000 & cursor->frequency) >> 16);
 			array[index + 5] = (uchar)((0xff000000 & cursor->frequency) >> 24);
+			index += 6;
 		}
 
 		cursor = cursor->next;
-		index += 5;
+		
 	}
 }

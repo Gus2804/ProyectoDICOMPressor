@@ -133,7 +133,7 @@ CompressionResults Compresor::compressByBilinearInterpolation(DicomFileStructure
 		differencesEntropies[i] = differencesFrequencies[i].getEntropy(differencesQuantized[i].rows*differencesQuantized[i].cols);
 		lengths[2 * i] = differencesFrequencies[i].getLength() * 5;
 		frequenciesArray[2 * i] = (uchar*)malloc(sizeof(uchar)*lengths[2 * i]);
-		differencesFrequencies[i].fillFrequencyArray(frequenciesArray[2 * i]);
+		differencesFrequencies[i].fillFrequencyArray(frequenciesArray[2 * i], quantizationLevels);
 		huffmanCompressor.creatDictionary(&differencesFrequencies[i], differenceDictionaries[i]);
 
 		//cout << "Min: " << minCorner[i] << ", Max: " << maxCorner[i] << endl;
@@ -142,7 +142,7 @@ CompressionResults Compresor::compressByBilinearInterpolation(DicomFileStructure
 		cornersEntropies[i] = cornersFrequencies[i].getEntropy(cornersQuantized[i].rows*cornersQuantized[i].cols);
 		lengths[2 * i + 1] = cornersFrequencies[i].getLength() * 5;
 		frequenciesArray[2 * i + 1] = (uchar*)malloc(sizeof(uchar)*lengths[2 * i + 1]);
-		cornersFrequencies[i].fillFrequencyArray(frequenciesArray[2 * i + 1]);
+		cornersFrequencies[i].fillFrequencyArray(frequenciesArray[2 * i + 1], quantizationLevels);
 		huffmanCompressor.creatDictionary(&cornersFrequencies[i], cornerDictionaries[i]);
 		//cornersFrequencies[i].print();
 	}
@@ -240,13 +240,13 @@ CompressionResults Compresor::compressByBilinearInterpolation(DicomFileStructure
 	double totalEntropyDifferences = 0;
 	double totalEntropyCorners = 0;
 	for (int i = 0; i < 3; i++) {
-		//std::cout << "Entropia de esquinas: " << cornersEntropies[i] << endl;
+		std::cout << "Entropia de esquinas: " << cornersEntropies[i] << endl;
 		totalEntropyCorners += cornersEntropies[i];
-		//std::cout << "Entropia de diferencias: " << differencesEntropies[i] << endl;
+		std::cout << "Entropia de diferencias: " << differencesEntropies[i] << endl;
 		totalEntropyDifferences += differencesEntropies[i];
 	}
-	//std::cout << "Entropia total de esquinas: " << totalEntropyCorners << endl;
-	//std::cout << "Entropia total de diferencias: " << totalEntropyDifferences << endl;
+	std::cout << "Entropia total de esquinas: " << totalEntropyCorners << endl;
+	std::cout << "Entropia total de diferencias: " << totalEntropyDifferences << endl;
 	double totalEntropy = (totalEntropyCorners / (m*n)) + totalEntropyDifferences;
 	compressionResults.setEntropy(totalEntropy);
 
@@ -433,7 +433,7 @@ CompressionResults Compresor::compressByRandomization(DicomFileStructure dicomFi
 	//Escritura archivo comprimido
 	HuffmanTree dctFrequencies[3];
 	double dctEntropies[3];
-	string dctDictionaries[3][256];
+	string dctDictionaries[3][512];
 	uchar** frequenciesArray = new uchar*[3];
 	int lengths[3];
 	HuffmanCompressor huffmanCompressor;
@@ -442,20 +442,20 @@ CompressionResults Compresor::compressByRandomization(DicomFileStructure dicomFi
 		dctEntropies[i] = dctFrequencies[i].getEntropy(dctQuantized[i].rows*dctQuantized[i].cols);
 		lengths[i] = dctFrequencies[i].getLength() * 6;
 		frequenciesArray[i] = (uchar*)malloc(sizeof(uchar)*lengths[i]);
-		dctFrequencies[i].fillFrequencyArray(frequenciesArray[i]);
+		dctFrequencies[i].fillFrequencyArray(frequenciesArray[i],9);
 		huffmanCompressor.creatDictionary(&dctFrequencies[i], dctDictionaries[i]);
 	}
 
 	//Escritura del archivo temporal con bytes de huffman
 	ofstream ftemp("Temp.tmp", ios::out | ios::binary);
-	char nextByte[1];
+	char nextByte;
 	int bitCount = 0;
 	for (int i = 0; i < 3; i++) {
 		ftemp.write(reinterpret_cast<char*>(&maxDct[i]), sizeof(double));
 		ftemp.write(reinterpret_cast<char*>(&minDct[i]), sizeof(double));
 		ftemp.write(reinterpret_cast<char*>(&lengths[i]), sizeof(int));
 		ftemp.write((char*)frequenciesArray[i], lengths[i]);
-		nextByte[0] = 0;
+		nextByte = 0;
 		bitCount = 0;
 		for (int a = 0; a < dctQuantized[i].rows; a++) {
 			short* dctQuantizedRow = dctQuantized[i].ptr<short>(a);
@@ -463,18 +463,18 @@ CompressionResults Compresor::compressByRandomization(DicomFileStructure dicomFi
 				uchar symbol = dctQuantizedRow[b];
 				for (int k = 0; k < dctDictionaries[i][symbol].size(); k++, bitCount++) {
 					if (bitCount == 8) {
-						ftemp.write(nextByte, 1);
-						nextByte[0] = 0;
+						ftemp.put(nextByte);
+						nextByte = 0;
 						bitCount = 0;
 					}
 					if (dctDictionaries[i][symbol][k] == '1') {
-						nextByte[0] = nextByte[0] | (0x01 << bitCount);
+						nextByte = nextByte | (0x01 << bitCount);
 					}
 				}
 			}
 		}
 		if (bitCount) {
-			ftemp.write(nextByte, 1);
+			ftemp.put(nextByte);
 		}
 	}
 	ftemp.close();
@@ -513,7 +513,9 @@ CompressionResults Compresor::compressByRandomization(DicomFileStructure dicomFi
 		}
 	}
 
-	int numOfPixels = dicomFile.getPixelData().cols * dicomFile.getPixelData().rows;
+	int imageWidth = dicomFile.getPixelData().cols;
+	int imageHeight = dicomFile.getPixelData().rows;
+	int numOfPixels = imageWidth * imageHeight;
 	Mat error = dicomFile.getPixelData() - imageReconstructedRounded;
 	Scalar sumError = sum(error);
 	double meanSquareError = ((std::pow(sumError[0], 2) + std::pow(sumError[1], 2) + std::pow(sumError[2], 2)) / numOfPixels) / 3;
@@ -531,9 +533,33 @@ CompressionResults Compresor::compressByRandomization(DicomFileStructure dicomFi
 	char prefix[] = "CSA";
 	compressedFile.write(prefix, 3);
 	compressedFile.write(reinterpret_cast<char*>(&PSNR), sizeof(double));
+	cout << "PSNR: " << PSNR << endl;
 	compressedFile.write(reinterpret_cast<char*>(&compressionRatio), sizeof(double));
+	cout << "CR: " << compressionRatio << endl;
 	compressedFile.write(reinterpret_cast<char*>(&totalEntropy), sizeof(double));
+	cout << "Entropy: " << totalEntropy << endl;
+	compressedFile.write(reinterpret_cast<char*>(&imageWidth), sizeof(int));
+	cout << "Width: " << imageWidth << endl;
+	compressedFile.write(reinterpret_cast<char*>(&imageHeight), sizeof(int));
+	cout << "Height: " << imageHeight << endl;
+	for (int i = 0; i < 3; i++) {
+		int length = list[i].getLength();
+		list[i].restartCursor();
+		compressedFile.write(reinterpret_cast<char*>(&length), sizeof(int));
+		cout << "Length " << i << ": " << length << endl;
+		for (int j = 0; j < length; j++) {
+			int* pos = list[i].getActualPos();
+			char data = list[i].getActualData();
+			compressedFile.write(reinterpret_cast<char*>(&pos[0]), sizeof(int));
+			compressedFile.write(reinterpret_cast<char*>(&pos[1]), sizeof(int));
+			compressedFile.write(&data, sizeof(char));
+			if (list[i].hasNext()) {
+				list[i].next();
+			}	
+		}
+	}
 	compressedFile.write(reinterpret_cast<char*>(&newLength), sizeof(int));
+	cout << "Header Length: " << newLength << endl;
 	if (newLength > 0) {
 		compressedFile.write(headerBytes, newLength);
 	}
