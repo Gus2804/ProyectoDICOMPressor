@@ -34,7 +34,7 @@ DicomFileStructure Decompressor::decompress(string path)
 	char prefix[3];
 	file.read(prefix, 3);
 	double PSNR, entropy, compressionRatio;
-	int imageWidth, imageHeigth;
+	int imageWidth, imageHeigth, quantizationLevels;
 	if (prefix[0] == 'I') {
 		int headerLength, m, n;
 		char *PSNRBytes, *CRBytes, *entropyBytes, *headerLengthBytes, *headerBytes;
@@ -68,6 +68,10 @@ DicomFileStructure Decompressor::decompress(string path)
 		headerLengthBytes = new char[sizeof(int)];
 		file.read(headerLengthBytes, sizeof(int));
 		imageHeigth = *((int*)(headerLengthBytes));
+
+		headerLengthBytes = new char[sizeof(int)];
+		file.read(headerLengthBytes, sizeof(int));
+		quantizationLevels = *((int*)(headerLengthBytes));
 
 		headerLengthBytes = new char[sizeof(int)];
 		file.read(headerLengthBytes, sizeof(int));
@@ -234,7 +238,7 @@ DicomFileStructure Decompressor::decompress(string path)
 					index++;
 				}
 			}
-			differencesDequantized[i] = dequantizeMat(differencesMat[i], 8, minDifferences[i], maxDifferences[i]);
+			differencesDequantized[i] = dequantizeMat(differencesMat[i], quantizationLevels, minDifferences[i], maxDifferences[i]);
 		}
 		cout << "Termina Decuantización" << endl;
 		Mat cornersDequantizedUchar[3];

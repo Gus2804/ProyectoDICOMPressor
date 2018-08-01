@@ -320,6 +320,7 @@ CompressionResults Compresor::compressByBilinearInterpolation(DicomFileStructure
 	compressedFile.write(reinterpret_cast<char*>(&n), sizeof(int));
 	compressedFile.write(reinterpret_cast<char*>(&imageWidth), sizeof(int));
 	compressedFile.write(reinterpret_cast<char*>(&imageHeight), sizeof(int));
+	compressedFile.write(reinterpret_cast<char*>(&quantizationLevels), sizeof(int));
 	compressedFile.write(reinterpret_cast<char*>(&headerSize), sizeof(int));
 	compressedFile.write(dicomFile.getHeader(), dicomFile.getHeaderSize());
 	//cout << tempSize << endl;
