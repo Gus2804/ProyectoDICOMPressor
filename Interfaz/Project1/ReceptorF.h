@@ -444,6 +444,17 @@ namespace Interfaz{
 				file.getPixelData().rows, file.getPixelData().step, System::Drawing::Imaging::PixelFormat::Format24bppRgb, ptr);
 			System::Drawing::RectangleF rect(0, 0, pictureBox1->Width, pictureBox1->Height);
 			graphics->DrawImage(bitmap, rect);
+
+			Study study = file.getStudy();
+			institutionDepartament->Text = gcnew System::String(study.institutionDepartament.c_str());
+			institutionName->Text = gcnew System::String(study.institutionName.c_str());
+			patientName->Text = gcnew System::String(study.patientName.c_str());
+			responsable->Text = gcnew System::String(study.responsable.c_str());
+			responsableRol->Text = gcnew System::String(study.responsableRol.c_str());
+			patientBirthdate->Text = gcnew System::String(study.patientBirthdate.c_str());
+			patientSex->Text = gcnew System::String(study.patientSex.c_str());
+			studyDate->Text = gcnew System::String(study.studyDate.c_str());
+			studyDescription->Text = gcnew System::String(study.studyDescription.c_str());
 		}
 	}
 	private: System::Void mostbtn_Click(System::Object^  sender, System::EventArgs^  e) {

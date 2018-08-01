@@ -2,6 +2,7 @@
 #include "Compresor.h"
 #include "HuffmanCompressor.h"
 #include "RandomizationList.h"
+#include "DicomExtractor.h"
 
 #include <fstream>
 
@@ -77,6 +78,8 @@ DicomFileStructure Decompressor::decompress(string path)
 		headerBytes = new char[headerLength];
 		file.read(headerBytes, headerLength);
 		fileOutput.write(headerBytes, headerLength);
+		DicomExtractor extractor;
+		structure.setStudy(extractor.getStudyFromHeader(headerBytes, headerLength));
 
 		char* doubleBytes = new char[sizeof(double)];
 		char* intBytes = new char[sizeof(int)];
@@ -279,9 +282,9 @@ DicomFileStructure Decompressor::decompress(string path)
 
 				char* rgb = (char*)malloc(sizeof(char) * 3);
 
-				rgb[0] = pixel[2];
-				rgb[1] = pixel[1];
-				rgb[2] = pixel[0];
+				rgb[0] = pixel[1];
+				rgb[1] = pixel[0];
+				rgb[2] = pixel[2];
 
 				fileOutput.write(rgb, sizeof(char) * 3);
 			}
@@ -409,8 +412,8 @@ DicomFileStructure Decompressor::decompress(string path)
 
 		Mat dctDequantized[3];
 
-		string header = "";
-		int index = 0;
+		char header[2048];
+		int index = 0, count=0;
 		char aux;
 		for (int i = 0; i < 3; i++) {
 			index = 0;
@@ -427,17 +430,27 @@ DicomFileStructure Decompressor::decompress(string path)
 			if (list[i].getLength()) {
 				while (list[i].hasNext()) {
 					int* pos = list[i].getActualPos();
+					if (count < 4 ||
+						((header[count - 4] != 0xffffffe0) ||
+						(header[count - 3] != 0x7f) ||
+						(header[count - 2] != 0x10) ||
+						(header[count - 1] != 0x00))) {
+						aux = (char)dctQuantized[i].at<short>(pos[0], pos[1]);
+						header[count] = aux;
+						count++;
+					}
 					dctQuantized[i].at<short>(pos[0], pos[1]) = list[i].getActualData();;
 					list[i].next();
 				}
 				int* pos = list[i].getActualPos();
-				if (header.size() < 4 ||
-					((header.at(header.size() - 4) != 0xffffffe0) ||
-					(header.at(header.size() - 3) != 0x7f) ||
-					(header.at(header.size() - 2) != 0x10) ||
-					(header.at(header.size() - 1) != 0x00))) {
+				if (index < 4 ||
+					((header[index - 4] != 0xffffffe0) ||
+					(header[index - 3] != 0x7f) ||
+					(header[index - 2] != 0x10) ||
+					(header[index - 1] != 0x00))) {
 					aux = (char)dctQuantized[i].at<short>(pos[0], pos[1]);
-					header = header + aux;
+					header[index] = aux;
+					index++;
 				}
 				dctQuantized[i].at<short>(pos[0], pos[1]) = list[i].getActualData();;
 			}
@@ -446,7 +459,7 @@ DicomFileStructure Decompressor::decompress(string path)
 
 		if (headerLength > 0) {
 			for (int i = 0; i < headerLength; i++) {
-				header = header + headerBytes[i];
+				header[count+1+i] = headerBytes[i];
 			}
 		}
 
@@ -462,7 +475,7 @@ DicomFileStructure Decompressor::decompress(string path)
 			}
 		}
 		structure.setPixelData(imageReconstructedRounded);
-		fileOutput.write(header.c_str(), header.size());
+		fileOutput.write(header, headerLength+count+1);
 
 		for (int i = 0; i < imageReconstructedRounded.rows; i++)
 		{
@@ -472,9 +485,9 @@ DicomFileStructure Decompressor::decompress(string path)
 
 				char* rgb = (char*)malloc(sizeof(char) * 3);
 
-				rgb[0] = pixel[2];
+				rgb[0] = pixel[0];
 				rgb[1] = pixel[1];
-				rgb[2] = pixel[0];
+				rgb[2] = pixel[2];
 
 				fileOutput.write(rgb, sizeof(char) * 3);
 			}
